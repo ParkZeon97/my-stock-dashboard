@@ -14,13 +14,21 @@ export function useStocks(watchlist: string[]) {
 
     setLoading(true);
     try {
-      const data = await Promise.all(watchlist.map((s) => fetchStock(s)));
-      setStocks(data);
+      const results = await Promise.allSettled(
+        watchlist.map((s) => fetchStock(s)),
+      );
+      const successful = results
+        .filter(
+          (r): r is PromiseFulfilledResult<StockData> =>
+            r.status === "fulfilled" && r.value !== null,
+        )
+        .map((r) => r.value);
+
+      setStocks(successful);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchAll();
   }, [watchlist]);

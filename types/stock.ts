@@ -1,6 +1,10 @@
 export interface PortfolioData {
+  lots: PositionLot[];
+}
+
+export interface PositionLot {
+  price: number;
   qty: number;
-  avg: number;
 }
 
 export interface AIAnalysis {
@@ -18,4 +22,5 @@ export interface StockData {
   changePercent: number;
   isPositive: boolean;
   aiAnalysis: AIAnalysis;
+  sector: string;
 }

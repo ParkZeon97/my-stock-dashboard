@@ -1,7 +1,13 @@
 import { StockData } from "@/types/stock";
 
-export async function fetchStock(symbol: string): Promise<StockData> {
-  const res = await fetch(`/api/stock?symbol=${symbol}`);
-  if (!res.ok) throw new Error("Failed to fetch stock");
-  return res.json();
+export async function fetchStock(symbol: string): Promise<StockData | null> {
+  try {
+    const res = await fetch(`/api/stock?symbol=${symbol}`);
+
+    if (!res.ok) return null;
+
+    return res.json();
+  } catch {
+    return null;
+  }
 }
