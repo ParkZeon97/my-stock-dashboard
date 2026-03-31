@@ -13,10 +13,15 @@ export default function DashboardPage() {
   const { watchlist, setWatchlist } = useWatchlist();
   const {
     portfolioPositions,
-    updatePortfolioLot,
-    addPortfolioLot,
-    removePortfolioLot,
-    removePortfolioAsset,
+    draftPositions,
+    updateSavedLot,
+    removeSavedLot,
+    addDraftLot,
+    updateDraftLot,
+    removeDraftLot,
+    savePortfolio,
+    removeAsset,
+    addedCost,
   } = usePortfolio();
 
   const { stocks, loading, refetch: refreshStockPrices } = useStocks(watchlist);
@@ -48,11 +53,6 @@ export default function DashboardPage() {
     }
   };
 
-  const removeFromWatchlist = (symbol: string) => {
-    setWatchlist((prev) => prev.filter((s) => s !== symbol));
-    removePortfolioAsset(symbol);
-  };
-
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-800 via-blue-890 to-black p-8 text-white">
       <DashboardHeader
@@ -67,10 +67,18 @@ export default function DashboardPage() {
       <PortfolioTable
         stocks={stocks}
         portfolioPositions={portfolioPositions}
-        onUpdateLot={updatePortfolioLot}
-        onAddLot={addPortfolioLot}
-        onRemoveLot={removePortfolioLot}
-        onRemoveAsset={removeFromWatchlist}
+        draftPositions={draftPositions}
+        onUpdateSavedLot={updateSavedLot}
+        onRemoveSavedLot={removeSavedLot}
+        onUpdateDraftLot={updateDraftLot}
+        onRemoveDraftLot={removeDraftLot}
+        onAddLot={addDraftLot}
+        onRemoveAsset={(symbol) => {
+          setWatchlist((prev) => prev.filter((s) => s !== symbol));
+          removeAsset(symbol);
+        }}
+        addedCost={addedCost}
+        savePortfolio={savePortfolio}
       />
     </div>
   );

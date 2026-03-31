@@ -5,30 +5,54 @@ import { calculateAllocationBySector } from "@/lib/calculations";
 import { calculateSectorWithStocks } from "@/lib/calculations";
 import StockRow from "@/components/dashboard/stock-row";
 import SectorPieChart from "@/components/dashboard/sector-pie-chart";
+import { usePortfolio } from "@/hooks/usePortfolio";
+
 interface Props {
   stocks: StockData[];
+
   portfolioPositions: Record<
     string,
     { lots: { price: number; qty: number }[] }
   >;
-  onUpdateLot: (
+  draftPositions: Record<string, { lots: { price: number; qty: number }[] }>;
+
+  onUpdateSavedLot: (
     symbol: string,
     index: number,
     field: "price" | "qty",
     value: string,
   ) => void;
-  onAddLot: (symbol: string) => void;
-  onRemoveLot: (symbol: string, index: number) => void;
+
+  onUpdateDraftLot: (
+    symbol: string,
+    index: number,
+    field: "price" | "qty",
+    value: string,
+  ) => void;
+
+  onAddLot: (symbol: string, price: number) => void;
+
+  onRemoveSavedLot: (symbol: string, index: number) => void;
+  onRemoveDraftLot: (symbol: string, index: number) => void;
+
   onRemoveAsset: (symbol: string) => void;
+
+  addedCost: number;
+  savePortfolio: () => void;
 }
 
 export default function PortfolioTable({
   stocks,
   portfolioPositions,
-  onUpdateLot,
+  draftPositions,
+  onUpdateSavedLot,
+  onUpdateDraftLot,
   onAddLot,
-  onRemoveLot,
+  onRemoveSavedLot,
+  onRemoveDraftLot,
   onRemoveAsset,
+  addedCost,
+  savePortfolio,
 }: Props) {
   const summary = stocks.reduce(
     (acc, stock) => {
@@ -56,6 +80,7 @@ export default function PortfolioTable({
     portfolioPositions,
     stocks,
   );
+
   return (
     <div className="backdrop-blur-sm shadow-lg border border-slate-200 rounded-2xl overflow-hidden">
       <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-black border border-blue-900 shadow-xl">
@@ -85,6 +110,18 @@ export default function PortfolioTable({
           </div>
 
           {/* RIGHT */}
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-emerald-400">
+              Added: ${addedCost.toFixed(2)}
+            </div>
+
+            <button
+              onClick={savePortfolio}
+              className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-semibold"
+            >
+              Save Portfolio
+            </button>
+          </div>
           <div className="text-right">
             <p className="text-xs text-slate-400 uppercase tracking-wider">
               Total Cost
@@ -114,25 +151,7 @@ export default function PortfolioTable({
           </div>
         ))}
       </div>
-      <div className="mt-6 p-4 bg-slate-900 rounded-xl border border-blue-900">
-        <h3 className="text-sm text-slate-400 mb-3">Sector Allocation</h3>
 
-        {sectorData.map((item) => (
-          <div key={item.sector} className="mb-2">
-            <div className="flex justify-between text-xs">
-              <span>{item.sector}</span>
-              <span>{item.percent.toFixed(2)}%</span>
-            </div>
-
-            <div className="w-full bg-slate-800 h-2 rounded">
-              <div
-                className="bg-purple-500 h-2 rounded"
-                style={{ width: `${item.percent}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
       <SectorPieChart data={sectorData} />
       <table className="w-full text-sm">
         <thead className="border-b broder-slate-200">
@@ -148,16 +167,18 @@ export default function PortfolioTable({
             <StockRow
               key={stock.symbol}
               stock={stock}
-              lots={portfolioPositions[stock.symbol]?.lots || []}
-              onLotChange={(index, field, value) =>
-                onUpdateLot(stock.symbol, index, field, value)
+              savedLots={portfolioPositions[stock.symbol]?.lots || []}
+              draftLots={draftPositions[stock.symbol]?.lots || []}
+              onSavedLotChange={(i, f, v) =>
+                onUpdateSavedLot(stock.symbol, i, f, v)
               }
-              onAddLot={() => onAddLot(stock.symbol)}
-              onRemoveLot={(index) => onRemoveLot(stock.symbol, index)}
+              onDraftLotChange={(i, f, v) =>
+                onUpdateDraftLot(stock.symbol, i, f, v)
+              }
+              onAddLot={() => onAddLot(stock.symbol, stock.currentPrice)}
+              onRemoveSavedLot={(i) => onRemoveSavedLot(stock.symbol, i)}
+              onRemoveDraftLot={(i) => onRemoveDraftLot(stock.symbol, i)}
               onRemoveAsset={() => onRemoveAsset(stock.symbol)}
-              onSubmit={() => {
-                console.log("submit", stock.symbol);
-              }}
             />
           ))}
         </tbody>

@@ -3,28 +3,41 @@ import { StockData } from "@/types/stock";
 
 interface Props {
   stock: StockData;
-  lots: { price: number; qty: number }[];
 
-  onLotChange: (index: number, field: "price" | "qty", value: string) => void;
+  savedLots: { price: number; qty: number }[];
+  draftLots: { price: number; qty: number }[];
+
+  onSavedLotChange: (
+    index: number,
+    field: "price" | "qty",
+    value: string,
+  ) => void;
+
+  onDraftLotChange: (
+    index: number,
+    field: "price" | "qty",
+    value: string,
+  ) => void;
 
   onAddLot: () => void;
-
-  onRemoveLot: (index: number) => void;
+  onRemoveSavedLot: (index: number) => void;
+  onRemoveDraftLot: (index: number) => void;
 
   onRemoveAsset: () => void;
-
-  onSubmit: () => void;
 }
 
 export default function StockRow({
   stock,
-  lots,
-  onLotChange,
+  savedLots,
+  draftLots,
+  onSavedLotChange,
+  onDraftLotChange,
   onAddLot,
-  onRemoveLot,
+  onRemoveSavedLot,
+  onRemoveDraftLot,
   onRemoveAsset,
-  onSubmit,
 }: Props) {
+  const allLots = [...savedLots, ...draftLots];
   const {
     totalQty,
     avgPrice,
@@ -33,7 +46,7 @@ export default function StockRow({
     isProfit,
     totalCost,
     marketValue,
-  } = calculatePosition(lots, stock.currentPrice);
+  } = calculatePosition(allLots, stock.currentPrice);
 
   return (
     <tr className="hover:bg-slate-600 transition-colors">
@@ -55,43 +68,43 @@ export default function StockRow({
           </div>
         </div>
 
-        <div className="space-y-3">
-          {lots.map((lot, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-blue-900"
-            >
-              <span className="text-xs w-12">Lot {index + 1}</span>
+        {/* SAVED */}
+        {savedLots.map((lot, index) => (
+          <div key={`saved-${index}`} className="flex gap-2">
+            <input
+              type="number"
+              value={lot.price || ""}
+              onChange={(e) => onSavedLotChange(index, "price", e.target.value)}
+            />
+            <input
+              type="number"
+              value={lot.qty || ""}
+              onChange={(e) => onSavedLotChange(index, "qty", e.target.value)}
+            />
+            <button onClick={() => onRemoveSavedLot(index)}>✕</button>
+          </div>
+        ))}
 
-              <input
-                type="number"
-                placeholder="Price"
-                value={lot.price === 0 ? "" : lot.price}
-                onChange={(e) => onLotChange(index, "price", e.target.value)}
-                className="bg-slate-800 border border-blue-800 rounded-lg px-2 py-1 w-24 text-sm"
-              />
-
-              <input
-                type="number"
-                placeholder="Qty"
-                value={lot.qty === 0 ? "" : lot.qty}
-                onChange={(e) => onLotChange(index, "qty", e.target.value)}
-                className="bg-slate-800 border border-blue-800 rounded-lg px-2 py-1 w-20 text-sm"
-              />
-
-              <button
-                onClick={() => onRemoveLot(index)}
-                className="text-rose-400 text-xs hover:text-rose-300"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
+        {/* DRAFT */}
+        {draftLots.map((lot, index) => (
+          <div key={`draft-${index}`} className="flex gap-2 bg-green-900/20">
+            <input
+              type="number"
+              value={lot.price || ""}
+              onChange={(e) => onDraftLotChange(index, "price", e.target.value)}
+            />
+            <input
+              type="number"
+              value={lot.qty || ""}
+              onChange={(e) => onDraftLotChange(index, "qty", e.target.value)}
+            />
+            <button onClick={() => onRemoveDraftLot(index)}>✕</button>
+          </div>
+        ))}
 
         <button
           onClick={onAddLot}
-          className="mt-3 text-xs text-blue-400 hover:text-blue-300"
+          className="mt-3 text-xs text-emerald-400 hover:text-emerald-300"
         >
           + Add Lot
         </button>
@@ -113,12 +126,6 @@ export default function StockRow({
       <td className="px-6 py-4 text-right">
         <div className="text-blue-200 font-medium">${avgPrice.toFixed(2)}</div>
 
-        <button
-          onClick={onSubmit}
-          className="mt-2 bg-blue-600/30 border border-blue-700 px-3 py-1 rounded-lg text-xs hover:bg-blue-600/50"
-        >
-          Save
-        </button>
         <button
           onClick={onRemoveAsset}
           className="mt-2 ml-2 bg-red-600 border border-white-700 px-3 py-1 rounded-lg text-xs hover:bg-red-600/50"
