@@ -23,4 +23,6 @@ export interface StockData {
   isPositive: boolean;
   aiAnalysis: AIAnalysis;
   sector: string;
+  industry: string;
+  subsector: string;
 }

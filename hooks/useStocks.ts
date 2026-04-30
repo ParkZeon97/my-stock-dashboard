@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchStock } from "@/lib/api";
 import { StockData } from "@/types/stock";
+import { classifyCompany } from "@/lib/sector-map";
 
 export function useStocks(watchlist: string[]) {
   const [stocks, setStocks] = useState<StockData[]>([]);
@@ -22,9 +23,23 @@ export function useStocks(watchlist: string[]) {
           (r): r is PromiseFulfilledResult<StockData> =>
             r.status === "fulfilled" && r.value !== null,
         )
-        .map((r) => r.value);
+        .map((r) => {
+          const stock = r.value;
 
+          const { sector, subsector } = classifyCompany(
+            stock.industry,
+            stock.name,
+            stock.symbol,
+          );
+
+          return {
+            ...stock,
+            sector,
+            subsector,
+          };
+        });
       setStocks(successful);
+      console.log("AFTER CLASSIFY:", successful);
     } finally {
       setLoading(false);
     }

@@ -1,11 +1,10 @@
-import { StockData, PortfolioData } from "@/types/stock";
+import { StockData } from "@/types/stock";
 import { calculatePosition } from "@/lib/calculations";
-import { calculateAllocationByStock } from "@/lib/calculations";
+import { calculateStockAllocation } from "@/lib/calculations";
 import { calculateAllocationBySector } from "@/lib/calculations";
-import { calculateSectorWithStocks } from "@/lib/calculations";
 import StockRow from "@/components/dashboard/stock-row";
-import SectorPieChart from "@/components/dashboard/sector-pie-chart";
-import { usePortfolio } from "@/hooks/usePortfolio";
+import { AllocationStockPie } from "@/components/dashboard/sector-pie-chart";
+import { AllocationSectorPie } from "@/components/dashboard/sector-pie-chart";
 
 interface Props {
   stocks: StockData[];
@@ -72,18 +71,15 @@ export default function PortfolioTable({
   const plPercent =
     summary.totalCost > 0 ? (plValue / summary.totalCost) * 100 : 0;
   const isProfit = plValue >= 0;
-  const allocation = calculateAllocationByStock(portfolioPositions, stocks);
 
+  console.log("RAW STOCKS:", stocks);
+
+  const stockData = calculateStockAllocation(portfolioPositions, stocks);
   const sectorData = calculateAllocationBySector(portfolioPositions, stocks);
-
-  const sectorDataWithStock = calculateSectorWithStocks(
-    portfolioPositions,
-    stocks,
-  );
 
   return (
     <div className="backdrop-blur-sm shadow-lg border border-slate-200 rounded-2xl overflow-hidden">
-      <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-black border border-blue-900 shadow-xl">
+      <div className="mb-6 p-5 rounded-2xl bg-linear-to-r from-slate-900 via-blue-950 to-black border border-blue-900 shadow-xl">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           {/* LEFT */}
           <div>
@@ -132,27 +128,10 @@ export default function PortfolioTable({
           </div>
         </div>
       </div>
-      <div className="mt-6 p-4 bg-slate-900 rounded-xl border border-blue-900">
-        <h3 className="text-sm text-slate-400 mb-3">Allocation by Stock</h3>
 
-        {allocation.map((item) => (
-          <div key={item.symbol} className="mb-2">
-            <div className="flex justify-between text-xs">
-              <span>{item.symbol}</span>
-              <span>{item.percent.toFixed(2)}%</span>
-            </div>
+      <AllocationStockPie data={stockData} />
+      <AllocationSectorPie data={sectorData} />
 
-            <div className="w-full bg-slate-800 h-2 rounded">
-              <div
-                className="bg-blue-500 h-2 rounded"
-                style={{ width: `${item.percent}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <SectorPieChart data={sectorData} />
       <table className="w-full text-sm">
         <thead className="border-b broder-slate-200">
           <tr className="bg-slate-950 uppercase text-xs tracking-wider">

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { mapToSector } from "@/lib/sector-map";
 
 const FINNHUB_KEY = process.env.FINNHUB_KEY!;
 
@@ -39,13 +38,10 @@ export async function GET(request: Request) {
 
     const industry = profile.finnhubIndustry || "";
 
-    const sector = mapToSector(industry);
-
     return NextResponse.json({
       symbol: symbol,
       name: profile.name || symbol, // ได้ชื่อเต็มบริษัทแล้ว เช่น "Tesla Inc"
       currentPrice: currentPrice,
-      sector: sector,
       afterHoursPrice: afterHoursPrice,
       changePercent: data.dp || 0,
       isPositive: (data.dp || 0) >= 0,

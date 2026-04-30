@@ -24,21 +24,27 @@ export function calculatePosition(
     isProfit: plValue >= 0,
   };
 }
-export function calculateAllocationByStock(
+export function calculateAllocationByStockWithSector(
   portfolio: Record<string, { lots: { price: number; qty: number }[] }>,
-  stocks: { symbol: string; currentPrice: number }[],
+  stocks: {
+    symbol: string;
+    currentPrice: number;
+    sector: string;
+    subsector: string;
+  }[],
 ) {
   let totalMarketValue = 0;
 
   const items = stocks.map((stock) => {
     const lots = portfolio[stock.symbol]?.lots || [];
-
     const position = calculatePosition(lots, stock.currentPrice);
 
     totalMarketValue += position.marketValue;
 
     return {
       symbol: stock.symbol,
+      sector: stock.sector,
+      subsector: stock.subsector,
       value: position.marketValue,
     };
   });
@@ -46,23 +52,54 @@ export function calculateAllocationByStock(
   return items.map((item) => ({
     ...item,
     percent: totalMarketValue > 0 ? (item.value / totalMarketValue) * 100 : 0,
+    label: `${item.sector} | ${item.subsector}`, // 🔥 ใช้ใน legend
+  }));
+}
+export function calculateStockAllocation(
+  portfolio: Record<string, { lots: { price: number; qty: number }[] }>,
+  stocks: {
+    symbol: string;
+    currentPrice: number;
+  }[],
+) {
+  let totalCost = 0;
+
+  const items = stocks.map((stock) => {
+    const lots = portfolio[stock.symbol]?.lots || [];
+    const position = calculatePosition(lots, stock.currentPrice);
+
+    totalCost += position.totalCost;
+
+    return {
+      symbol: stock.symbol,
+      cost: position.totalCost,
+      pnl: position.marketValue - position.totalCost,
+    };
+  });
+
+  return items.map((item) => ({
+    ...item,
+    percent: totalCost > 0 ? (item.cost / totalCost) * 100 : 0,
   }));
 }
 export function calculateAllocationBySector(
   portfolio: Record<string, { lots: { price: number; qty: number }[] }>,
-  stocks: { symbol: string; currentPrice: number; sector: string }[],
+  stocks: {
+    symbol: string;
+    currentPrice: number;
+    sector: string;
+  }[],
 ) {
   let totalMarketValue = 0;
   const sectorMap: Record<string, number> = {};
 
   for (const stock of stocks) {
     const lots = portfolio[stock.symbol]?.lots || [];
-
     const position = calculatePosition(lots, stock.currentPrice);
 
     totalMarketValue += position.marketValue;
 
-    const sector = stock.sector || "Unknown";
+    const sector = stock.sector || "Other";
 
     sectorMap[sector] = (sectorMap[sector] || 0) + position.marketValue;
   }
@@ -70,47 +107,6 @@ export function calculateAllocationBySector(
   return Object.entries(sectorMap).map(([sector, value]) => ({
     sector,
     value,
-    percent: totalMarketValue > 0 ? (value / totalMarketValue) * 100 : 0,
-  }));
-}
-export function calculateSectorWithStocks(
-  portfolio: Record<string, { lots: { price: number; qty: number }[] }>,
-  stocks: { symbol: string; currentPrice: number; sector: string }[],
-) {
-  const sectorMap: Record<
-    string,
-    {
-      value: number;
-      stocks: { symbol: string; cost: number }[];
-    }
-  > = {};
-
-  stocks.forEach((stock) => {
-    const lots = portfolio[stock.symbol]?.lots || [];
-
-    const position = calculatePosition(lots, stock.currentPrice);
-
-    const sector = stock.sector || "Other";
-
-    if (!sectorMap[sector]) {
-      sectorMap[sector] = {
-        value: 0,
-        stocks: [],
-      };
-    }
-
-    // ✅ ใช้ totalCost (ตาม requirement คุณ)
-    sectorMap[sector].value += position.totalCost;
-
-    sectorMap[sector].stocks.push({
-      symbol: stock.symbol,
-      cost: position.totalCost,
-    });
-  });
-
-  return Object.entries(sectorMap).map(([sector, data]) => ({
-    sector,
-    value: data.value,
-    stocks: data.stocks,
+    percent: totalMarketValue > 0 ? value / totalMarketValue : 0,
   }));
 }
